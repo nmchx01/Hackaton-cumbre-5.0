@@ -21,6 +21,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // usuario se quedaba con un canvas vacío en vez de los datos de B.
 window.initResultsPage = function initResultsPage() {
     if (!document.getElementById("tab-resumen")) return;
+    const fontFamily = getComputedStyle(document.documentElement)
+        .getPropertyValue("--font-body")
+        .trim();
+    if (window.Chart && fontFamily) Chart.defaults.font.family = fontFamily;
     if (_trendsChart) {
         _trendsChart.destroy();
         _trendsChart = null;
@@ -222,7 +226,7 @@ function initTrendsChart() {
                 maintainAspectRatio: false,
                 interaction: { mode: "index", intersect: false },
                 plugins: {
-                    legend: { position: "bottom", labels: { color: inkMuted, usePointStyle: true, font: { family: "IBM Plex Sans", size: 12 } } },
+                    legend: { position: "bottom", labels: { color: inkMuted, usePointStyle: true, font: { size: 12 } } },
                 },
                 scales: {
                     x: { grid: { color: gridLine }, ticks: { color: inkMuted, font: { size: 11 } } },

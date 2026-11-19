@@ -17,6 +17,7 @@ El proyecto combina visión por computadora con un dashboard web en español. Es
 - Comparar tendencias guardadas y consultar resultados históricos.
 - Probar escenarios en el simulador y obtener recomendaciones basadas en reglas.
 - Usar el dashboard en tema claro u oscuro, con navegación adaptable a móvil.
+- Usar [Oxanium](https://fonts.google.com/specimen/Oxanium) como tipografía unificada en la interfaz y las gráficas, bajo [SIL Open Font License 1.1](https://github.com/google/fonts/blob/main/ofl/oxanium/OFL.txt).
 - Ejecutar la aplicación localmente o en Docker, con CPU y una opción GPU para equipos compatibles.
 
 <details>

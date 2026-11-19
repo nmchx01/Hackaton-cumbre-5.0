@@ -9,10 +9,9 @@
 
    Fuentes: cargadas vía <link> real en el <head> de templates/layout.html
    (Google Fonts), NO @import aquí (bug histórico, ver sección 24).
-   Tipografía única Rubik (título y cuerpo) desde la ronda de porting de
-   interacción/diseño -- reemplaza Manrope + IBM Plex Sans por completo,
-   no una fuente adicional para un uso puntual (ver docs/architecture.md
-   para el detalle de esta decisión).
+   Tipografía única Oxanium (título y cuerpo), una alternativa gratuita
+   de aspecto geométrico y angular para mantener una sola voz en toda la
+   interfaz. La fuente variable se sirve desde Google Fonts.
 
    ============================================================================
    SISTEMA DE TEMAS -- cómo leer este archivo
@@ -43,8 +42,8 @@
    ============================================================================= */
 
 :root {
-    --font-heading: 'Rubik', 'Segoe UI', sans-serif;
-    --font-body: 'Rubik', 'Segoe UI', sans-serif;
+    --font-heading: 'Oxanium', 'Segoe UI', sans-serif;
+    --font-body: 'Oxanium', 'Segoe UI', sans-serif;
 
     --space-1: 4px;
     --space-2: 8px;
@@ -266,6 +265,7 @@
    ============================================================================= */
 
 * { box-sizing: border-box; }
+button, input, select, textarea { font-family: var(--font-body); }
 
 html, body {
     margin: 0;

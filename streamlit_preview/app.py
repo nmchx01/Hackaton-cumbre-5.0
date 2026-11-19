@@ -264,7 +264,8 @@ st.markdown(
         --retail-accent: #5B4FD6;
         --retail-muted: #65656F;
     }
-    [data-testid="stAppViewContainer"] { background: #F7F7F9; }
+    body, button, input, select, textarea { font-family: "Oxanium", sans-serif; }
+    [data-testid="stAppViewContainer"] { background: #F7F7F9; font-family: "Oxanium", sans-serif; }
     [data-testid="stSidebar"] { background: #FFFFFF; }
     .block-container { max-width: 1440px; padding-top: 2.2rem; padding-bottom: 3rem; }
     .page-hero {
