@@ -1,8 +1,8 @@
 # Preview de Retailytics en Streamlit
 
-Esta app presenta una vista ligera del dashboard usando los artefactos de muestra versionados en `data/output/`. Sirve para revisar jerarquía visual, navegación y gráficos durante las iteraciones de UX.
+Esta app presenta una vista ligera del dashboard usando los artefactos de muestra versionados en `data/output/`. Sirve para revisar jerarquía visual, navegación y gráficos durante las iteraciones de UX. Incluye una pantalla de carga lineal que es solo un prototipo: no procesa ni guarda videos. El archivo seleccionado se transmite a Streamlit durante la sesión, así que no subas grabaciones sensibles.
 
-No recibe ni procesa videos, no ejecuta modelos de visión y no escribe en los datos del proyecto.
+No ejecuta modelos de visión ni escribe en los datos del proyecto. El prototipo de carga acepta un archivo solo para mostrar el estado visual del formulario; no analiza ni conserva el archivo.
 
 ## Ejecutar localmente
 

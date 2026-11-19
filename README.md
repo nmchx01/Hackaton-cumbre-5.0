@@ -72,7 +72,7 @@ Para escuchar en otra interfaz o puerto, configura `FLASK_HOST` y `FLASK_PORT`. 
 
 ### Preview de interfaz con Streamlit
 
-Para revisar cambios de UX en una app ligera, el repositorio incluye un preview separado que usa datos e imágenes de demostración. No procesa videos ni carga los modelos YOLO.
+Para revisar cambios de UX en una app ligera, el repositorio incluye un preview separado que usa datos e imágenes de demostración. Incluye un prototipo lineal de carga para probar la interfaz, pero no procesa ni guarda los videos seleccionados. El archivo se transmite a Streamlit durante la sesión; no uses grabaciones sensibles.
 
 ```bash
 pip install -r streamlit_preview/requirements.txt
@@ -81,7 +81,7 @@ streamlit run streamlit_preview/app.py
 
 Para publicarlo en Streamlit Community Cloud, crea una app con esta rama y usa `streamlit_preview/app.py` como archivo de entrada. El archivo de dependencias está junto a la app y la configuración visual está en `.streamlit/config.toml`. Community Cloud también permite elegir la rama y la ruta de entrada al crear una app ([guía oficial](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy)).
 
-El preview es una superficie de iteración de interfaz, no reemplaza el dashboard Flask ni permite procesar videos.
+El preview es una superficie de iteración de interfaz, no reemplaza el dashboard Flask ni permite procesar videos. El flujo real de carga y análisis está en el dashboard Flask.
 
 ## Flujo de trabajo
 

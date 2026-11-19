@@ -178,6 +178,78 @@ def render_maps() -> None:
                 st.info("La imagen de demostración no está disponible.")
 
 
+def render_upload_preview() -> None:
+    """Muestra el flujo lineal de carga sin ejecutar el procesamiento real."""
+    render_page_header(
+        "ASISTENTE DE CARGA · PROTOTIPO",
+        "Analiza un video, paso a paso",
+        "Completa cada sección en orden. Las opciones recomendadas ya están listas para empezar.",
+    )
+    st.info(
+        "Este preview solo demuestra la interfaz: no procesa ni guarda videos. "
+        "El archivo elegido se transmite a Streamlit durante la sesión; usa solo "
+        "un video de prueba y no subas grabaciones sensibles."
+    )
+
+    st.markdown("### 1. Selecciona el video")
+    st.caption("Elige una grabación corta de una tienda. Formatos admitidos: MP4, MOV o AVI.")
+    video = st.file_uploader(
+        "Video de la cámara",
+        type=["mp4", "mov", "avi"],
+        help="Prototipo visual. El archivo no se analiza ni se conserva después de la sesión.",
+    )
+    if video:
+        st.success(f"Video listo: {video.name}")
+
+    st.markdown("### 2. Elige qué parte analizar")
+    st.caption("Si el video tiene tiempo sin actividad, puedes seleccionar un tramo.")
+    trim_video = st.checkbox("Quiero analizar solo una parte del video")
+    if trim_video:
+        trim_start, trim_end = st.slider(
+            "Tramo de ejemplo (minutos)",
+            min_value=0,
+            max_value=60,
+            value=(0, 10),
+            help="En la aplicación completa verás una imagen del inicio y del final.",
+        )
+        st.caption(f"Tramo seleccionado: minuto {trim_start} a {trim_end}.")
+    else:
+        st.caption("Se usaría la grabación completa.")
+
+    st.markdown("### 3. Indica dónde están las góndolas")
+    st.caption("En la aplicación, marcarás cada zona sobre un fotograma del video.")
+    zone_count = st.selectbox("¿Cuántas zonas quieres marcar?", [1, 2, 3, 4, 5], index=1)
+    for zone_index in range(zone_count):
+        st.text_input(
+            f"Nombre de la zona {zone_index + 1}",
+            value="" if zone_index else "Góndola principal",
+            placeholder="Ej.: Lácteos, Snacks, Pasillo 1",
+            key=f"preview_zone_{zone_index}",
+        )
+
+    st.markdown("### 4. Confirma y comienza")
+    st.caption("La configuración automática es la recomendada para la mayoría de los casos.")
+    record_history = st.checkbox("Guardar el análisis para comparar resultados", value=True)
+    run_date = st.date_input("Día de la grabación") if record_history else None
+    skip_interactions = st.checkbox(
+        "Omitir el cálculo de interacciones para terminar más rápido"
+    )
+    with st.expander("Opciones técnicas (puedes dejarlas como están)"):
+        st.selectbox("Equipo de procesamiento", ["Automático (recomendado)", "CPU", "GPU"])
+        st.caption("Los valores avanzados se mantienen en su configuración recomendada.")
+
+    if st.button("Iniciar análisis de prueba", type="primary", disabled=video is None):
+        st.success(
+            "Formulario completo. Esta vista previa no inicia el análisis; "
+            "la aplicación local realiza el procesamiento real."
+        )
+    st.caption(
+        "Configuración de prueba: "
+        f"{zone_count} zona(s), interacciones {'omitidas' if skip_interactions else 'incluidas'}, "
+        f"historial {'activado' if record_history else 'desactivado'}."
+    )
+
+
 st.set_page_config(
     page_title="Retailytics · Preview UX",
     page_icon="🛍️",
@@ -231,11 +303,11 @@ with st.sidebar:
     st.selectbox("Cámara", ["Principal"], index=0)
     page = st.radio(
         "Explorar",
-        ["Resumen", "Zonas", "Interacciones", "Mapas"],
+        ["Resumen", "Zonas", "Interacciones", "Mapas", "Nueva carga (demo)"],
         label_visibility="collapsed",
     )
     st.divider()
-    st.caption("Demo de UX · No procesa ni carga videos")
+    st.caption("Demo de UX · los videos no se procesan")
 
 summary_df = load_csv(f"zone_summary_{STORE_NAME}.csv")
 interaction_df = load_csv(f"interaction_summary_{STORE_NAME}.csv")
@@ -246,5 +318,7 @@ elif page == "Zonas":
     render_zones(summary_df)
 elif page == "Interacciones":
     render_interactions(interaction_df)
-else:
+elif page == "Mapas":
     render_maps()
+else:
+    render_upload_preview()

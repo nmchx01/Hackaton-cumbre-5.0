@@ -3,125 +3,161 @@
 {% block title %}Configurar {{ current_store }} -- Retailytics{% endblock %}
 {% block content %}
 
-<p class="caption" id="setup-page-root">Configurando <strong>{{ current_store }}</strong>: sube tu grabación, marca el rango de interés, y deja que el sistema procese el resto.</p>
+<header class="setup-intro">
+    <p class="eyebrow">ASISTENTE DE CARGA</p>
+    <h1>Analiza un video de {{ current_store }}</h1>
+    <p id="setup-page-root">Sigue estos pasos en orden. Te explicamos qué necesitas y puedes dejar las opciones recomendadas como están.</p>
+    <ol class="setup-progress" aria-label="Pasos del análisis">
+        <li class="{% if video_path %}is-complete{% else %}is-current{% endif %}" {% if not video_path %}aria-current="step"{% endif %}><span>1</span> Video</li>
+        <li class="{% if video_path %}is-current{% endif %}" {% if video_path %}aria-current="step"{% endif %}><span>2</span> Recorte</li>
+        <li><span>3</span> Zonas</li>
+        <li><span>4</span> Análisis</li>
+    </ol>
+</header>
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}{% for m in messages %}{% call alert('warning') %}{{ m }}{% endcall %}{% endfor %}{% endif %}
 {% endwith %}
 
-<h3>1. Sube tu video</h3>
-{% if not video_path %}
-<form method="post" action="{{ url_for('setup.upload') }}" enctype="multipart/form-data">
-    <input type="hidden" name="store" value="{{ current_store }}">
-    <label class="custom-file-upload form-field" for="video-upload">
-        <div class="icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 16.5V7.5M8.5 11L12 7.5L15.5 11M4 17.5V18.75C4 19.9926 5.00736 21 6.25 21H17.75C18.9926 21 20 19.9926 20 18.75V17.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+<main class="setup-flow">
+    <section class="setup-step {% if not video_path %}is-current{% endif %}" aria-labelledby="setup-step-upload">
+        <div class="setup-step-heading">
+            <span class="setup-step-number">1</span>
+            <div><h2 id="setup-step-upload">Selecciona el video</h2><p>Elige la grabación de la cámara que quieres analizar.</p></div>
         </div>
-        <div class="text"><span>Arrastra o selecciona tu video</span></div>
-        <input id="video-upload" type="file" name="video" accept=".mp4,.avi,.mov" required>
-    </label>
-    <button type="submit" class="btn btn-primary"><i data-lucide="upload" class="icon"></i> Subir video</button>
-</form>
-{% else %}
-<video controls class="media-frame">
-    <source src="{{ url_for('api.media', relpath=video_path) }}">
-</video>
-<form method="post" action="{{ url_for('setup.reset') }}" style="margin-top:0.5rem;">
-    <input type="hidden" name="store" value="{{ current_store }}">
-    <button type="submit" class="btn btn-sm"><i data-lucide="rotate-ccw" class="icon"></i> Usar otro video</button>
-</form>
+        {% if not video_path %}
+        <form class="setup-form" method="post" action="{{ url_for('setup.upload') }}" enctype="multipart/form-data">
+            <input type="hidden" name="store" value="{{ current_store }}">
+            <label class="custom-file-upload form-field" for="video-upload">
+                <div class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 16.5V7.5M8.5 11L12 7.5L15.5 11M4 17.5V18.75C4 19.9926 5.00736 21 6.25 21H17.75C18.9926 21 20 19.9926 20 18.75V17.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="text"><span>Selecciona o arrastra aquí tu video</span></div>
+                <input id="video-upload" type="file" name="video" accept=".mp4,.avi,.mov" required aria-describedby="upload-help">
+            </label>
+            <p class="setup-help" id="upload-help">Formatos compatibles: MP4, AVI y MOV. Los videos largos pueden tardar más en procesarse.</p>
+            <button type="submit" class="btn btn-primary"><i data-lucide="upload" class="icon"></i> Continuar con este video</button>
+        </form>
+        {% else %}
+        <div class="setup-selected-video">
+            <video controls class="media-frame" aria-label="Video seleccionado para el análisis"><source src="{{ url_for('api.media', relpath=video_path) }}"></video>
+            <form method="post" action="{{ url_for('setup.reset') }}">
+                <input type="hidden" name="store" value="{{ current_store }}">
+                <button type="submit" class="btn btn-sm"><i data-lucide="rotate-ccw" class="icon"></i> Elegir otro video</button>
+            </form>
+        </div>
+        {% endif %}
+    </section>
 
-<h3>2. (Opcional) Elige un rango a analizar</h3>
-<div class="checkbox-row">
-    <input type="checkbox" id="want-trim">
-    <label for="want-trim" style="font-weight:400;">Quiero recortar el video (por ejemplo, para evitar horas de tienda cerrada)</label>
-</div>
-<div id="trim-section" style="display:none;">
-    <p class="caption">Duración total: <span id="trim-duration-label"></span></p>
-    <div class="form-field">
-        <label>Rango a analizar (segundos)</label>
-        <input type="range" id="trim-start" min="0" max="{{ duration }}" value="0" step="0.5">
-        <input type="range" id="trim-end" min="0" max="{{ duration }}" value="{{ duration }}" step="0.5">
-        <p class="caption" id="trim-range-label"></p>
-    </div>
-    <div class="thumb-row">
-        <div class="thumb-col panel"><p class="caption">Inicio</p><img id="trim-start-thumb"></div>
-        <div class="thumb-col panel"><p class="caption">Fin</p><img id="trim-end-thumb"></div>
-    </div>
-    <button class="btn" id="trim-apply-btn" data-video="{{ video_path }}"><i data-lucide="scissors" class="icon"></i> Recortar video con el rango elegido</button>
-    <div id="trim-status" class="caption"></div>
-</div>
-
-<h3>3. Marca tus góndolas</h3>
-{% if has_heat_preview %}
-{% call alert('success') %}Hay una vista previa de calor disponible para guiar la calibración.{% endcall %}
-{% else %}
-{% call alert('info') %}Todavía no hay una vista previa de calor para este video. Sin ella, es fácil calibrar una zona mal ubicada y perder interacción real.{% endcall %}
-<button class="btn" id="generate-preview-btn" data-store="{{ current_store }}" data-video="{{ video_path }}"><i data-lucide="flame" class="icon"></i> Generar vista previa de calor (recomendado, toma unos minutos)</button>
-<div id="preview-progress"></div>
-{% endif %}
-
-{% if zones_exist %}
-{% call alert('success') %}Ya existen zonas calibradas para "{{ current_store }}".{% endcall %}
-<div class="checkbox-row"><input type="checkbox" id="recalibrate-check"><label for="recalibrate-check" style="font-weight:400;">Recalibrar de todos modos</label></div>
-<div id="calibration-area" style="display:none;"></div>
-{% else %}
-<div id="calibration-area"></div>
-{% endif %}
-
-<div id="calibration-root" data-store="{{ current_store }}" data-video="{{ video_path }}" data-has-heat-preview="{{ 'true' if has_heat_preview else 'false' }}"></div>
-
-<h3>4. Procesar</h3>
-<div id="process-section">
-    <div class="checkbox-row">
-        <input type="checkbox" id="skip-hands-check">
-        <label for="skip-hands-check" style="font-weight:400;">Omitir detección de manos/interacción (procesa más rápido, pero no tendrás datos de interacción con el producto)</label>
-    </div>
-    <div class="checkbox-row">
-        <input type="checkbox" id="record-history-check" checked>
-        <label for="record-history-check" style="font-weight:400;">Guardar este resultado en el historial de tendencias</label>
-    </div>
-    <div class="form-field" id="run-date-field">
-        <label for="run-date-input">Fecha de esta grabación</label>
-        <input type="date" id="run-date-input">
-        <p class="caption" id="run-date-help">Se guardará con la fecha de hoy para poder comparar tendencias más adelante. Cambia la fecha si esta grabación es de otro día.</p>
-    </div>
-
-    <details class="expander">
-        <summary><i data-lucide="sliders-horizontal" class="icon"></i> Ajustes técnicos avanzados (no hace falta tocar esto en la mayoría de los casos) <i data-lucide="chevron-down" class="icon chevron"></i></summary>
-        <div class="expander-body">
-            <p class="caption">Estos valores afinan el algoritmo interno que sigue a cada persona en el video. Los valores por defecto ya funcionan bien para la mayoría de los videos.</p>
-            <div class="form-field">
-                <label for="device-select">Dispositivo de procesamiento</label>
-                <select id="device-select">
-                    <option value="auto" selected>Automático (recomendado)</option>
-                    <option value="cpu">Forzar CPU</option>
-                    {% if gpu_info.available %}
-                    <option value="gpu">Forzar GPU ({{ gpu_info.name }} detectada)</option>
-                    {% else %}
-                    <option value="gpu" disabled>Forzar GPU (no disponible)</option>
-                    {% endif %}
-                </select>
-                {% if not gpu_info.available %}
-                <p class="caption">No se detectó una GPU compatible en este equipo.</p>
-                {% endif %}
+    {% if video_path %}
+    <section class="setup-step" aria-labelledby="setup-step-trim">
+        <div class="setup-step-heading">
+            <span class="setup-step-number">2</span>
+            <div><h2 id="setup-step-trim">Elige qué parte analizar <span class="setup-optional">Opcional</span></h2><p>Si la grabación incluye horas sin actividad, puedes analizar solo el tramo que te interesa.</p></div>
+        </div>
+        <div class="setup-form">
+            <div class="checkbox-row setup-choice">
+                <input type="checkbox" id="want-trim">
+                <label for="want-trim"><strong>Sí, quiero elegir un tramo</strong><span>Déjalo desmarcado para usar el video completo.</span></label>
             </div>
-            <div class="panel-row">
-                <div class="form-field"><label>Cuerpo: segundos máximos de "desaparición" tolerados</label><input type="number" id="body-max-gap" value="2.0" step="0.1"></div>
-                <div class="form-field"><label>Cuerpo: velocidad máxima plausible (px/s)</label><input type="number" id="body-max-speed" value="500.0" step="10"></div>
-            </div>
-            <div class="panel-row">
-                <div class="form-field"><label>Mano: segundos máximos de "desaparición" tolerados</label><input type="number" id="hand-max-gap" value="5.0" step="0.1"></div>
-                <div class="form-field"><label>Mano: velocidad máxima plausible (px/s)</label><input type="number" id="hand-max-speed" value="300.0" step="10"></div>
+            <div id="trim-section" style="display:none;">
+                <p class="setup-help">Duración del video: <strong id="trim-duration-label"></strong>. Ajusta el inicio y el final del tramo.</p>
+                <div class="form-field setup-range-field">
+                    <label for="trim-start">Desde el inicio (segundos)</label>
+                    <input type="range" id="trim-start" min="0" max="{{ duration }}" value="0" step="0.5">
+                    <label for="trim-end">Hasta el final (segundos)</label>
+                    <input type="range" id="trim-end" min="0" max="{{ duration }}" value="{{ duration }}" step="0.5">
+                    <p class="caption" id="trim-range-label" aria-live="polite"></p>
+                </div>
+                <div class="thumb-row">
+                    <div class="thumb-col panel"><p class="caption">Vista del inicio</p><img id="trim-start-thumb" alt="Fotograma del inicio seleccionado"></div>
+                    <div class="thumb-col panel"><p class="caption">Vista del final</p><img id="trim-end-thumb" alt="Fotograma del final seleccionado"></div>
+                </div>
+                <button class="btn" id="trim-apply-btn" data-video="{{ video_path }}"><i data-lucide="scissors" class="icon"></i> Guardar este tramo</button>
+                <div id="trim-status" class="caption" role="status" aria-live="polite"></div>
             </div>
         </div>
-    </details>
+    </section>
 
-    <button class="btn btn-primary" id="process-btn" data-store="{{ current_store }}"><i data-lucide="play" class="icon"></i> Procesar video</button>
-    <div id="process-progress"></div>
-</div>
-{% endif %}
+    <section class="setup-step" aria-labelledby="setup-step-zones">
+        <div class="setup-step-heading">
+            <span class="setup-step-number">3</span>
+            <div><h2 id="setup-step-zones">Indica dónde están las góndolas</h2><p>Marca las zonas sobre la imagen para que el análisis sepa dónde medir visitas e interacciones.</p></div>
+        </div>
+        <div class="setup-form">
+            {% if has_heat_preview %}
+            {% call alert('success') %}Vista previa lista: úsala como guía para ubicar las zonas.{% endcall %}
+            {% else %}
+            {% call alert('info') %}Puedes generar una vista de calor para orientarte. Si prefieres, continúa y marca las zonas directamente sobre el video.{% endcall %}
+            <button class="btn" id="generate-preview-btn" data-store="{{ current_store }}" data-video="{{ video_path }}"><i data-lucide="flame" class="icon"></i> Crear vista de calor <span class="setup-button-hint">puede tardar unos minutos</span></button>
+            <div id="preview-progress" role="status" aria-live="polite"></div>
+            {% endif %}
 
+            {% if zones_exist %}
+            {% call alert('success') %}Ya hay zonas guardadas para esta cámara. Puedes conservarlas o actualizarlas.{% endcall %}
+            <div class="checkbox-row setup-choice"><input type="checkbox" id="recalibrate-check"><label for="recalibrate-check"><strong>Quiero volver a marcar las zonas</strong><span>Activa esta opción para abrir el editor.</span></label></div>
+            <div id="calibration-area" style="display:none;"></div>
+            {% else %}
+            <div id="calibration-area"></div>
+            {% endif %}
+            <div id="calibration-root" data-store="{{ current_store }}" data-video="{{ video_path }}" data-has-heat-preview="{{ 'true' if has_heat_preview else 'false' }}"></div>
+        </div>
+    </section>
+
+    <section class="setup-step" aria-labelledby="setup-step-process">
+        <div class="setup-step-heading">
+            <span class="setup-step-number">4</span>
+            <div><h2 id="setup-step-process">Confirma y comienza</h2><p>Las opciones recomendadas sirven para la mayoría de los videos. Puedes cambiar solo lo que necesites.</p></div>
+        </div>
+        <div class="setup-form" id="process-section">
+            <div class="checkbox-row setup-choice">
+                <input type="checkbox" id="skip-hands-check">
+                <label for="skip-hands-check"><strong>Omitir el análisis de interacciones</strong><span>El proceso será más rápido, pero no calculará interacciones con los productos.</span></label>
+            </div>
+            <div class="checkbox-row setup-choice">
+                <input type="checkbox" id="record-history-check" checked>
+                <label for="record-history-check"><strong>Guardar este análisis en el historial</strong><span>Así podrás comparar los resultados con otras fechas.</span></label>
+            </div>
+            <div class="form-field" id="run-date-field">
+                <label for="run-date-input">¿Qué día se grabó el video?</label>
+                <input type="date" id="run-date-input" aria-describedby="run-date-help">
+                <p class="setup-help" id="run-date-help">Usaremos la fecha de hoy. Cámbiala si el video es de otro día.</p>
+            </div>
+
+            <details class="expander">
+                <summary><i data-lucide="sliders-horizontal" class="icon"></i> Opciones técnicas <span class="setup-button-hint">puedes dejarlas como están</span><i data-lucide="chevron-down" class="icon chevron"></i></summary>
+                <div class="expander-body">
+                    <p class="setup-help">La configuración automática es adecuada para la mayoría de equipos y grabaciones.</p>
+                    <div class="form-field">
+                        <label for="device-select">Equipo que procesará el video</label>
+                        <select id="device-select">
+                            <option value="auto" selected>Elegir automáticamente (recomendado)</option>
+                            <option value="cpu">Procesador (CPU)</option>
+                            {% if gpu_info.available %}<option value="gpu">Tarjeta gráfica (GPU: {{ gpu_info.name }})</option>{% else %}<option value="gpu" disabled>Tarjeta gráfica (GPU no disponible)</option>{% endif %}
+                        </select>
+                        {% if not gpu_info.available %}<p class="caption">No se detectó una tarjeta gráfica compatible en este equipo.</p>{% endif %}
+                    </div>
+                    <div class="panel-row">
+                        <div class="form-field"><label for="body-max-gap">Segundos que una persona puede quedar fuera de vista</label><input type="number" id="body-max-gap" value="2.0" step="0.1"></div>
+                        <div class="form-field"><label for="body-max-speed">Velocidad máxima de movimiento de personas (px/s)</label><input type="number" id="body-max-speed" value="500.0" step="10"></div>
+                    </div>
+                    <div class="panel-row">
+                        <div class="form-field"><label for="hand-max-gap">Segundos que una mano puede quedar fuera de vista</label><input type="number" id="hand-max-gap" value="5.0" step="0.1"></div>
+                        <div class="form-field"><label for="hand-max-speed">Velocidad máxima de movimiento de manos (px/s)</label><input type="number" id="hand-max-speed" value="300.0" step="10"></div>
+                    </div>
+                </div>
+            </details>
+
+            <button class="btn btn-primary setup-submit" id="process-btn" data-store="{{ current_store }}"><i data-lucide="play" class="icon"></i> Iniciar análisis</button>
+            <p class="setup-help">El análisis se ejecuta en segundo plano. Podrás consultar el progreso en las notificaciones.</p>
+            <div id="process-progress" role="status" aria-live="polite"></div>
+        </div>
+    </section>
+    {% else %}
+    <aside class="setup-next-steps" aria-label="Pasos siguientes">
+        <strong>Después de subir el video</strong>
+        <ol><li>Elegir si necesitas recortar el tramo.</li><li>Marcar las góndolas que quieres medir.</li><li>Iniciar el análisis con las opciones recomendadas.</li></ol>
+    </aside>
+    {% endif %}
+</main>
 {% endblock %}

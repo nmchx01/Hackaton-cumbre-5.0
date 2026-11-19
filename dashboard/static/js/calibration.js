@@ -44,16 +44,20 @@ function initCanvas(container, store, video, hasHeatPreview) {
     container.dataset.initialized = "true";
 
     container.innerHTML = `
-        <p class="caption">Haz clic sobre la imagen para ir marcando las esquinas de una góndola (mínimo 3 puntos).
-        Cuando termines esa zona, presiona "Cerrar zona".</p>
+        <ol class="setup-instructions">
+            <li>Haz clic en la imagen para marcar las esquinas de una góndola (necesitas al menos 3 puntos).</li>
+            <li>Escribe un nombre fácil de reconocer para esta zona.</li>
+            <li>Presiona «Guardar esta zona» y repite para cada góndola.</li>
+        </ol>
         <canvas id="calibration-canvas"></canvas>
         <div class="form-field" style="margin-top:0.75rem;">
             <label for="zone-name-input">Nombre de esta góndola/zona</label>
-            <input type="text" id="zone-name-input" placeholder="Ej: Lácteos, Pasillo 1, Snacks...">
+            <input type="text" id="zone-name-input" placeholder="Ej.: Lácteos, Pasillo 1, Snacks">
+            <p class="caption">Usa un nombre corto para identificarla en los resultados.</p>
         </div>
         <div style="display:flex; gap:var(--space-2); margin-bottom:var(--space-4); flex-wrap:wrap;">
             <button class="btn" id="undo-point-btn"><i data-lucide="undo-2" class="icon"></i> Deshacer último punto</button>
-            <button class="btn" id="close-zone-btn"><i data-lucide="shapes" class="icon"></i> Cerrar zona actual</button>
+            <button class="btn" id="close-zone-btn"><i data-lucide="shapes" class="icon"></i> Guardar esta zona</button>
             <button class="btn btn-primary" id="save-zones-btn" disabled><i data-lucide="save" class="icon"></i> Guardar todas las zonas</button>
         </div>
         <div id="zone-list"></div>
