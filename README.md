@@ -70,6 +70,19 @@ Abre [http://127.0.0.1:5000](http://127.0.0.1:5000). En la primera visita crea l
 
 Para escuchar en otra interfaz o puerto, configura `FLASK_HOST` y `FLASK_PORT`. `FLASK_DEBUG` está desactivado por defecto; actívalo únicamente durante desarrollo. `FLASK_SECRET_KEY` permite definir una clave estable para la sesión de Flask. Sin ella se genera una clave aleatoria al arrancar.
 
+### Preview de interfaz con Streamlit
+
+Para revisar cambios de UX en una app ligera, el repositorio incluye un preview separado que usa datos e imágenes de demostración. No procesa videos ni carga los modelos YOLO.
+
+```bash
+pip install -r streamlit_preview/requirements.txt
+streamlit run streamlit_preview/app.py
+```
+
+Para publicarlo en Streamlit Community Cloud, crea una app con esta rama y usa `streamlit_preview/app.py` como archivo de entrada. El archivo de dependencias está junto a la app y la configuración visual está en `.streamlit/config.toml`. Community Cloud también permite elegir la rama y la ruta de entrada al crear una app ([guía oficial](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy)).
+
+El preview es una superficie de iteración de interfaz, no reemplaza el dashboard Flask ni permite procesar videos.
+
 ## Flujo de trabajo
 
 1. Crea o selecciona una tienda y una cámara.
@@ -122,6 +135,7 @@ Lee la [lista de privacidad](docs/privacy_checklist.md) antes de usar videos en 
 ```text
 dashboard/                 Aplicación Flask y frontend
 pipeline/                  Procesamiento de video y análisis
+streamlit_preview/          Preview ligero para iterar la UX en Streamlit
 config/                    Configuración de tiendas y zonas
 data/                      Entradas y artefactos de análisis locales
 docs/                      Arquitectura, privacidad y capturas
