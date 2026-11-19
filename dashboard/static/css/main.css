@@ -1260,7 +1260,11 @@ dialog.confirm-dialog input[type="text"] { margin-bottom: var(--space-4); }
     transition: color 0.15s var(--ease-standard), border-color 0.15s var(--ease-standard), box-shadow 0.2s var(--ease-standard), background-color 0.15s var(--ease-standard);
 }
 .tab-btn:hover { color: var(--color-ink); }
-.tab-btn:focus-visible { outline: none; color: var(--color-accent-text); }
+.tab-btn:focus-visible {
+    outline: 2px solid var(--color-accent-text);
+    outline-offset: 2px;
+    color: var(--color-accent-text);
+}
 .tab-btn.active {
     color: var(--color-accent-text);
     border-bottom-color: var(--color-accent);

@@ -1,148 +1,140 @@
-# Retail Vision MVP — Retailytics por Visión Computacional
+# Retailytics
 
-Prototipo de visión computacional que analiza video de una tienda para
-detectar y cuantificar la dinámica de los clientes alrededor de las
-góndolas (flujo, permanencia, interacción física con productos) y
-generar recomendaciones accionables de Retailytics — todo
-respetando privacidad por diseño (sin identificar personas, sin
-inferir emociones, sin almacenar biometría).
+**Entiende cómo se mueven e interactúan tus clientes con las góndolas.** Retailytics procesa video de tienda en el equipo local y convierte la actividad alrededor de los estantes en métricas y recomendaciones prácticas.
 
-## Principios de diseño
+El proyecto combina visión por computadora con un dashboard web en español. Está pensado para explorar flujo, permanencia e interacción por zona sin identificar a las personas ni enviar los videos a un servicio externo.
 
-- **100% local**: todo el procesamiento de video corre en la máquina
-  local. El video nunca sale del dispositivo ni se sube a ningún
-  servidor. Solo métricas agregadas (números, no imágenes) podrían
-  eventualmente sincronizarse a la nube si el negocio lo requiere.
-- **Privacidad por diseño**: no se guarda ninguna imagen de personas ni
-  dato biométrico. Los identificadores de persona son efímeros (solo
-  viven durante el procesamiento de un video, no permiten
-  re-identificación entre videos distintos).
-- **Honestidad técnica**: el sistema no promete más de lo que puede
-  sostener. En particular, la detección de interacción con producto
-  cuenta y mide la interacción física (aproximación, duración), pero
-  **no distingue con certeza si el resultado fue tomar o devolver un
-  producto** — esa distinción requeriría reconocimiento de acciones
-  especializado, fuera del alcance de este MVP.
-- **Escalable sin fricción**: cada tienda/cámara nueva solo requiere
-  una calibración de zonas de unos minutos — nada está "quemado" en el
-  código para una tienda específica.
-- **100% gratuito / open source**: todos los modelos y librerías usados
-  son gratuitos, sin dependencia de APIs de pago.
+<p align="center">
+  <img src="docs/screenshots/02_resultados_historia.png" alt="Panel de resultados de Retailytics" width="800">
+</p>
 
-## Instalación
+## Qué puedes hacer
+
+- Analizar videos de una o varias cámaras por tienda.
+- Calibrar las zonas de góndola desde un asistente visual.
+- Explorar visitas, tasa de detención, permanencia, mapas de calor y trayectorias.
+- Revisar eventos estimados de interacción entre manos y zonas de producto.
+- Comparar tendencias guardadas y consultar resultados históricos.
+- Probar escenarios en el simulador y obtener recomendaciones basadas en reglas.
+- Usar el dashboard en tema claro u oscuro, con navegación adaptable a móvil.
+- Ejecutar la aplicación localmente o en Docker, con CPU y una opción GPU para equipos compatibles.
+
+<details>
+  <summary>Ver más pantallas</summary>
+
+  <p align="center">
+    <img src="docs/screenshots/03_resultados_mapas.png" alt="Mapas de calor y trayectorias" width="800">
+  </p>
+
+  <p align="center">
+    <img src="docs/screenshots/11_asistente_paso4_procesar.png" alt="Asistente de configuración y procesamiento" width="800">
+  </p>
+</details>
+
+## Inicio rápido
+
+### Opción 1: Docker
+
+Necesitas Docker Desktop. Desde la raíz del repositorio:
 
 ```powershell
-python -m venv venv
-.\venv\Scripts\Activate.ps1
+.\docker-run.ps1
+```
+
+El script selecciona la configuración disponible y abre el dashboard en [http://localhost:5000](http://localhost:5000). En macOS, Linux o Git Bash, usa `./docker-run.sh`. Para iniciar directamente la variante CPU:
+
+```bash
+docker-compose up --build
+```
+
+La primera construcción descarga dependencias y modelos y puede tardar varios minutos. Los datos de `config/` y `data/` permanecen en el checkout y sobreviven a la reconstrucción del contenedor. La guía de [Docker](DOCKER.md) describe almacenamiento, GPU y solución de problemas.
+
+### Opción 2: Python
+
+Recomendado: Python 3.13. Crea un entorno virtual e instala las dependencias:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-**Alternativa sin instalar nada de Python/CV a mano**: con Docker
-Desktop instalado, `docker-compose up --build` levanta todo (pipeline +
-dashboard) en un solo comando -- ver [DOCKER.md](DOCKER.md) para el
-detalle completo (dónde persisten los datos, requisitos, variante GPU
-opcional).
+En macOS/Linux, activa el entorno con `source .venv/bin/activate`. Luego, desde la raíz del repositorio:
 
-## Estructura del proyecto
-
-```
-retail-vision-mvp/
-├── config/                    Configuración de zonas por tienda (JSON)
-├── data/
-│   ├── raw/                   Videos originales (nunca se procesan sin copia)
-│   ├── processed/             CSVs de tracking intermedios
-│   └── output/                Métricas agregadas finales (lo único persistente)
-├── pipeline/                  Scripts de procesamiento de video
-├── dashboard/                 App web (Flask + Jinja2 + HTML/CSS/JS propio)
-│   ├── routes/                 Blueprints (páginas, asistente de config., API/AJAX)
-│   ├── templates/               Plantillas Jinja2
-│   ├── static/                  CSS y JavaScript propios (sin frameworks de terceros)
-│   └── *.py                     Lógica de negocio pura (reutilizable sin Flask)
-├── docs/                      Documentación técnica y de privacidad
-└── _legacy_streamlit/         Versión anterior (Streamlit) -- histórica, ver docs/architecture.md sección 25
+```bash
+python dashboard/app.py
 ```
 
-## Cómo usarlo
+Abre [http://127.0.0.1:5000](http://127.0.0.1:5000). En la primera visita crea la cuenta local de la instalación. Los pesos de los modelos se descargan al necesitarlos; para CPU se intenta usar OpenVINO cuando está disponible y se conserva PyTorch como alternativa.
 
-### Opción A: interfaz web (recomendada)
+Para escuchar en otra interfaz o puerto, configura `FLASK_HOST` y `FLASK_PORT`. `FLASK_DEBUG` está desactivado por defecto; actívalo únicamente durante desarrollo. `FLASK_SECRET_KEY` permite definir una clave estable para la sesión de Flask. Sin ella se genera una clave aleatoria al arrancar.
 
-```powershell
-python dashboard\app.py
+## Flujo de trabajo
+
+1. Crea o selecciona una tienda y una cámara.
+2. Sube un video y, si hace falta, recórtalo desde el asistente.
+3. Marca en el canvas las zonas de interés de la cámara.
+4. Ejecuta el procesamiento y explora el panel de resultados.
+5. Guarda ejecuciones en el historial para comparar periodos.
+
+También puedes ejecutar el pipeline desde la terminal:
+
+```bash
+python pipeline/run_pipeline.py --help
 ```
 
-Abre `http://127.0.0.1:5000` en el navegador.
+## Cómo funciona
 
-La barra lateral es un panel de control persistente: ahí eliges una
-tienda existente o creas una nueva ("+ Nueva tienda / cámara"), y su
-estado (calibrada / procesada / con historial) queda siempre visible.
-
-- Si la tienda todavía no tiene resultados, se abre el asistente de
-  configuración: sube tu video, opcionalmente recórtalo, marca tus
-  góndolas, y procesa todo con un clic.
-- Si ya tiene resultados, se muestra directamente el panel con 6
-  pestañas (Historia, Mapas y trayectorias, Interacción con producto,
-  Tendencias, Simulador, Recomendaciones), con la opción de agregar una
-  nueva grabación o recalibrar sin perder los resultados existentes.
-
-### Opción B: línea de comandos, paso a paso
-
-Útil para depurar un módulo específico o para correr el pipeline sin
-interfaz gráfica.
-
-```powershell
-# 1. Calibrar zonas (una sola vez por cámara/tienda)
-python pipeline\calibrate_zones.py --video data\raw\mi_video.mp4 --store-name mi_tienda
-
-# 2. Correr el pipeline completo (detección, tracking, zonificación, interacción, heatmap)
-python pipeline\run_pipeline.py --video data\raw\mi_video.mp4 --store-name mi_tienda
-
-# 3. Ver resultados
-python dashboard\app.py
+```text
+Video local
+   │
+   ├── Detección y tracking de personas
+   ├── Unión de tracks fragmentados
+   ├── Métricas por zona y mapas de flujo
+   ├── Estimación de interacción mano-estante
+   └── Dashboard Flask con análisis e historial
 ```
 
-### Opción C: módulos individuales (para depuración)
+La aplicación está organizada en tres áreas principales:
 
-```powershell
-python pipeline\detect_and_track.py --video data\raw\mi_video.mp4
-python pipeline\track_stitching.py --input data\processed\tracks_mi_video.csv --diagnose
-python pipeline\track_stitching.py --input data\processed\tracks_mi_video.csv --max-gap-seconds 2 --max-speed-px-per-s 500
-python pipeline\zoning.py --tracks data\processed\tracks_mi_video_stitched.csv --zones config\zones_mi_tienda.json
-python pipeline\heatmap.py --video data\raw\mi_video.mp4 --tracks data\processed\tracks_mi_video.csv
-python pipeline\detect_hand_positions.py --video data\raw\mi_video.mp4
-python pipeline\interaction_events.py --hands data\processed\hands_mi_video_stitched.csv --zones config\zones_mi_tienda.json
+| Ruta | Responsabilidad |
+| --- | --- |
+| `dashboard/` | Aplicación Flask, rutas, servicios de negocio, plantillas y recursos de interfaz. |
+| `pipeline/` | Detección, tracking, calibración, métricas y generación de artefactos. |
+| `config/` y `data/` | Configuración de tiendas y resultados locales del procesamiento. |
+
+Las vistas se registran como Blueprints y delegan el trabajo a servicios del dashboard y módulos del pipeline. La factoría `dashboard.app.create_app(config)` permite proporcionar configuración al construir la aplicación. Consulta [docs/architecture.md](docs/architecture.md) para las decisiones y el recorrido técnico completo.
+
+## Privacidad y alcance
+
+- El análisis de video se ejecuta en el equipo donde corre la aplicación. Los videos no se suben a una API de análisis.
+- La interfaz puede solicitar Google Fonts, Lucide y Chart.js desde sus CDNs para mostrar tipografía, iconos y gráficos. Esos recursos no reciben los videos.
+- Los identificadores de tracking son temporales y pertenecen a una ejecución; no están diseñados para reconocer a alguien entre videos.
+- La aplicación persiste métricas, configuraciones y archivos de resultados locales. La carpeta `.secrets/` contiene credenciales de la instalación y está excluida de Git.
+- Las interacciones son estimaciones de proximidad y duración entre manos y zonas de estante. **No permiten asegurar que una persona tomó o devolvió un producto, ni confirman una compra.**
+- La detección puede variar según ángulo, iluminación, oclusión y calidad del video. Los resultados apoyan el análisis operativo; no sustituyen una medición transaccional.
+
+Lee la [lista de privacidad](docs/privacy_checklist.md) antes de usar videos en un entorno real.
+
+## Estructura del repositorio
+
+```text
+dashboard/                 Aplicación Flask y frontend
+pipeline/                  Procesamiento de video y análisis
+config/                    Configuración de tiendas y zonas
+data/                      Entradas y artefactos de análisis locales
+docs/                      Arquitectura, privacidad y capturas
+_legacy_streamlit/         Prototipo anterior conservado como referencia
 ```
 
-## Modelos usados
+## Documentación
 
-| Módulo | Modelo | Por qué |
-|---|---|---|
-| Detección/tracking de cuerpo | YOLO26n | Mejor desempeño medido en vista cenital (72% más detecciones que YOLOv8 en nuestras pruebas) |
-| Detección de manos/pose | YOLOv8n-pose | Mejor precisión/recall contra las etiquetas reales de MERL que YOLO26s-pose en nuestras pruebas (ver `docs/architecture.md` sección 16) |
+- [Arquitectura y decisiones técnicas](docs/architecture.md)
+- [Guía de Docker](DOCKER.md)
+- [Lista de verificación de privacidad](docs/privacy_checklist.md)
+- [Índice de capturas](docs/screenshots/README.md)
 
-Ver `docs/architecture.md` (secciones 2 y 16) para el detalle de por qué se eligió esta
-combinación híbrida en vez de un solo modelo para todo.
+## Licencia
 
-## Limitaciones conocidas
-
-- La calibración de zonas se hace marcando puntos sobre un `<canvas>`
-  HTML5 en el navegador (JavaScript propio, sin librerías de terceros).
-  El polígono en progreso se dibuja enteramente en el cliente, sin
-  recargar la página en cada clic. Una calibración por canvas equivalente
-  se había evaluado y descartado durante la era Streamlit por depender
-  de una librería sin mantenimiento activo (`streamlit-drawable-canvas`,
-  ver `docs/architecture.md` sección 10) -- al migrar a un frontend
-  propio esa limitación dejó de aplicar.
-- La detección de interacción con producto es una **estimación de
-  frecuencia/intensidad**, no una medición certera de compra o
-  devolución (ver sección de Honestidad técnica arriba).
-- El procesamiento no es en tiempo real: un video de ~2 minutos tarda
-  aproximadamente 10-12 minutos en CPU, o ~3.5 minutos con GPU NVIDIA
-  (probado en RTX 3050) -- ver `docs/architecture.md` sección 13. La
-  mayoría del tiempo lo consume la detección YOLO, no la lógica de
-  negocio. El sistema funciona correctamente en ambos casos; GPU es
-  una mejora de velocidad opcional, no un requisito.
-
-## Documentación adicional
-
-- `docs/architecture.md` — decisiones técnicas y su justificación
-- `docs/privacy_checklist.md` — cumplimiento de privacidad por diseño y Ley 1581
+Este repositorio no incluye actualmente un archivo de licencia. Añade una licencia antes de redistribuir o reutilizar el código fuera de los permisos que te haya concedido su autor.

@@ -22,6 +22,7 @@ Uso:
 """
 
 import os
+import secrets
 import sys
 
 from flask import Flask, g, jsonify, redirect, request, url_for
@@ -35,19 +36,21 @@ from routes.auth_routes import auth_bp, PUBLIC_AUTH_ENDPOINTS
 import jwt_service
 
 
-def create_app() -> Flask:
-    app = Flask(__name__)
-    # Clave de sesión: solo se usa para mensajes flash / estado transitorio
-    # muy puntual -- la mayoría del estado real vive en archivos, no en
-    # sesión (ver docstring del módulo). No es sensible (no guarda ninguna
-    # credencial ni dato de negocio), así que un valor fijo por proceso es
-    # suficiente para este alcance. NO es la clave que firma la sesión de
-    # login (ver jwt_service.py: usa su propia clave aleatoria persistida
-    # en .secrets/, nunca este valor fijo del repo).
-    app.secret_key = os.environ.get("FLASK_SECRET_KEY", "retail-vision-mvp-dev-key")
+def create_app(config: dict | None = None) -> Flask:
+    """Construye la aplicación con configuración reemplazable.
 
-    # Límite generoso de subida (videos pueden pesar varias decenas de MB).
-    app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024 * 1024  # 2 GB importar en docker
+    El argumento permite ajustar la configuración de Flask al crear cada
+    instancia, sin cambiar la configuración usada por otros entornos.
+    """
+    app = Flask(__name__)
+    app.config.from_mapping(
+        SECRET_KEY=os.environ.get("FLASK_SECRET_KEY") or secrets.token_urlsafe(32),
+        MAX_CONTENT_LENGTH=2 * 1024 * 1024 * 1024,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+    )
+    if config:
+        app.config.update(config)
 
     app.register_blueprint(main_bp)
     app.register_blueprint(setup_bp)
@@ -129,4 +132,5 @@ if __name__ == "__main__":
     # antes.
     host = os.environ.get("FLASK_HOST", "127.0.0.1")
     port = int(os.environ.get("FLASK_PORT", "5000"))
-    app.run(debug=True, use_reloader=False, host=host, port=port)
+    debug = os.environ.get("FLASK_DEBUG", "").strip().lower() in {"1", "true", "yes"}
+    app.run(debug=debug, use_reloader=False, host=host, port=port)
